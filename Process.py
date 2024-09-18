@@ -28,6 +28,9 @@ class Process(Thread):
             if self.getName() == "P1":
                 self.com.sendTo("Salut !", 2)
 
+            elif self.getName() == "P0":
+                self.com.broadcast("Je vous spam tous !")
+
             loop += 1
         print(self.getName() + " stopped")
 

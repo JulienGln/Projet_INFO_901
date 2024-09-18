@@ -14,12 +14,12 @@ class Mailbox():
         self.messages.append(msg)
 
     def __str__(self):
-        res = "["
+        res = "[ "
 
         for i in range(len(self.messages)):
             msg = self.messages[i]
-            res += f"{msg.getPayload()}"
+            res += f"{msg.getPayload()} [sender=P{msg.getSender()}]"
             if i != len(self.messages) - 1:
                 res += ", "
         
-        return res + "]"
+        return res + " ]"

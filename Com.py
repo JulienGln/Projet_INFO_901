@@ -41,8 +41,10 @@ class Com():
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=BroadcastMessage)
     def onBroadcast(self, m: BroadcastMessage):
-        self.inc_clock(m.getStamp())
-        self.mailbox.add(m)
+        if self.myId != m.getSender():
+            self.inc_clock(m.getStamp())
+            self.mailbox.add(m)
+            print(f"Mailbox de P{self.myId} : {self.mailbox}")
 
     def sendTo(self, obj, dest: int):
         msg = MessageTo(clock=self.clock, payload=obj, sender=self.myId, to=dest)
