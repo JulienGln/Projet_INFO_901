@@ -4,6 +4,7 @@ from time import sleep
 from Mailbox import Mailbox
 from BroadcastMessage import BroadcastMessage
 from MessageTo import MessageTo
+from Token import Token
 
 from pyeventbus3.pyeventbus3 import *
 
@@ -22,6 +23,11 @@ class Com():
         self.etat = "null"
 
         PyBus.Instance().register(self, self)
+
+        # Lancement du token 
+        if self.myId == self.nbProcess - 1:
+            token = Token(to=0)
+            PyBus.Instance().post(token)
 
     def getMyId(self):
         return self.myId
@@ -76,6 +82,22 @@ class Com():
     def releaseSC(self):
         self.etat = "release"
         self.lock.release()
+
+    @subscribe(threadMode=Mode.PARALLEL, onEvent=Token)
+    def onToken(self, token: Token):
+        if token.getTo() == self.myId:
+            if self.etat == "request":
+                self.etat = "SC"
+
+                while self.etat != "release":
+                    sleep(1)
+
+                self.etat = "null"
+            
+            next = (self.myId + 1) % self.nbProcess
+            token.setTo(next)
+            # if self.alive:
+            PyBus.Instance().post(token)
 
     def synchronize(self):
         pass
