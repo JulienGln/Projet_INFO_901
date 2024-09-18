@@ -1,12 +1,13 @@
 from threading import Thread, Lock
 from Com import Com
+from time import sleep
 
 class Process(Thread):
 
-    def __init__(self, name):
+    def __init__(self, name, nbProcess):
         Thread.__init__(self)
 
-        self.com = Com()
+        self.com = Com(nbProcess)
 
         self.nbProcess = self.com.getNbProcess()
 
@@ -21,6 +22,17 @@ class Process(Thread):
         loop = 0
 
         while self.alive:
-            loop += 1
+            print(self.getName() + " Loop: " + str(loop))
+            sleep(1)
 
+            if self.getName() == "P1":
+                self.com.sendTo("Salut !", 2)
+
+            loop += 1
         print(self.getName() + " stopped")
+
+    def stop(self):
+        self.alive = False
+
+    def waitStopped(self):
+        self.join()

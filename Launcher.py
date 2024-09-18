@@ -15,6 +15,7 @@ def launch(nbProcess, runningTime=5):
     for p in processes:
         p.waitStopped()
 
+# $ python3 Launcher.py
 if __name__ == '__main__':
 
     #bus = EventBus.getInstance()

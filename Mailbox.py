@@ -7,4 +7,19 @@ class Mailbox():
         return len(self.messages) == 0
 
     def getMsg(self):
-        pass
+        if not self.isEmpty():
+            return self.messages.pop(0)
+
+    def add(self, msg):
+        self.messages.append(msg)
+
+    def __str__(self):
+        res = "["
+
+        for i in range(len(self.messages)):
+            msg = self.messages[i]
+            res += f"{msg.getPayload()}"
+            if i != len(self.messages) - 1:
+                res += ", "
+        
+        return res + "]"
