@@ -36,23 +36,27 @@ class Com():
     # COMMUNICATION ASYNCHRONE #
 
     def broadcast(self, obj):
+        """Envoi en broadcast asynchrone d'un message `obj` sur le bus"""
         msg = BroadcastMessage(clock=self.clock, payload=obj, sender=self.myId)
         PyBus.Instance().post(msg)
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=BroadcastMessage)
     def onBroadcast(self, m: BroadcastMessage):
+        """Réception d'un broadcast `m` (sauf pour l'envoyeur !)"""
         if self.myId != m.getSender():
             self.inc_clock(m.getStamp())
             self.mailbox.add(m)
             print(f"Mailbox de P{self.myId} : {self.mailbox}")
 
     def sendTo(self, obj, dest: int):
+        """Envoi d'un message `obj` à un processus en particulier `dest` sur le bus"""
         msg = MessageTo(clock=self.clock, payload=obj, sender=self.myId, to=dest)
         print(f"P{self.myId} envoie \"{msg}\" à P{dest}")
         PyBus.Instance().post(msg)
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=MessageTo)
     def onReceive(self, m: MessageTo):
+        """Réception d'un message dédié `m`"""
         if self.myId == m.getTo():
             self.inc_clock(m.getStamp())
             self.mailbox.add(m)
