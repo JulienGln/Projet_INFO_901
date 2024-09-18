@@ -37,6 +37,7 @@ class Com():
 
     def broadcast(self, obj):
         """Envoi en broadcast asynchrone d'un message `obj` sur le bus"""
+        self.inc_clock()
         msg = BroadcastMessage(clock=self.clock, payload=obj, sender=self.myId)
         PyBus.Instance().post(msg)
 
@@ -50,6 +51,7 @@ class Com():
 
     def sendTo(self, obj, dest: int):
         """Envoi d'un message `obj` à un processus en particulier `dest` sur le bus"""
+        self.inc_clock()
         msg = MessageTo(clock=self.clock, payload=obj, sender=self.myId, to=dest)
         print(f"P{self.myId} envoie \"{msg}\" à P{dest}")
         PyBus.Instance().post(msg)
@@ -67,12 +69,13 @@ class Com():
     def requestSC(self):
         self.etat = "request"
 
-        # Utiliser une attente passive plutôt
-        while self.etat != "SC": # and self.alive
-            sleep(1)
+        self.lock.acquire(blocking=True, timeout=5)
+        # while self.etat != "SC": # and self.alive
+        #     sleep(1)
 
     def releaseSC(self):
         self.etat = "release"
+        self.lock.release()
 
     def synchronize(self):
         pass
