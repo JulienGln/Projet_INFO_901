@@ -31,7 +31,7 @@ class Com():
     
     def inc_clock(self, other_stamp = 0):
         with self.lock:
-            self.clock += max(self.clock, other_stamp) + 1
+            self.clock = max(self.clock, other_stamp) + 1
 
     # COMMUNICATION ASYNCHRONE #
 
