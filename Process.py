@@ -18,6 +18,49 @@ class Process(Thread):
         self.alive = True
         self.start()
 
+    def testAsynchrone(self):
+        if self.getName() == "P1":
+            self.com.sendTo("Salut !", 2)
+
+        elif self.getName() == "P0":
+            self.com.broadcast("Je vous spam tous !")
+
+    def testSectionCritique(self):
+        if self.getName() == "P1":
+            self.com.sendTo("Salut !", 2)
+
+        elif self.getName() == "P0":
+            self.com.requestSC()
+            self.com.broadcast("Je vous spam tous !")
+            self.com.releaseSC()
+        
+        elif self.getName() == "P2":
+            self.com.requestSC()
+            self.com.broadcast("P2 accède à la section critique")
+            print(f"P2 : Je suis dans la SC")
+            sleep(0.5)
+            self.com.releaseSC()
+
+    def testSynchrone(self):
+        if self.getName() == "P1":
+            self.com.broadcastSync(None, 0)
+            self.com.sendTo("Salut !", 2)
+
+        elif self.getName() == "P0":
+            # self.com.requestSC()
+            # self.com.broadcast("Je vous spam tous !")
+            # self.com.releaseSC()
+            self.com.broadcastSync("Je vous spam tous !", self.myId)
+        
+        elif self.getName() == "P2":
+            self.com.broadcastSync(None, 0)
+            self.com.requestSC()
+            self.com.broadcast("P2 accède à la section critique")
+            print(f"P2 : Je suis dans la SC")
+            sleep(0.5)
+            self.com.releaseSC()
+
+
     def run(self):
         loop = 0
 
@@ -25,20 +68,9 @@ class Process(Thread):
             print(self.getName() + " Loop: " + str(loop))
             sleep(1)
 
-            if self.getName() == "P1":
-                self.com.sendTo("Salut !", 2)
-
-            elif self.getName() == "P0":
-                self.com.requestSC()
-                self.com.broadcast("Je vous spam tous !")
-                self.com.releaseSC()
-            
-            elif self.getName() == "P2":
-                self.com.requestSC()
-                self.com.broadcast("P2 accède à la section critique")
-                print(f"P2 : Je suis dans la SC")
-                sleep(0.5)
-                self.com.releaseSC()
+            self.testAsynchrone()
+            self.testSectionCritique()
+            # self.testSynchrone()
 
             loop += 1
         print(self.getName() + " stopped")
