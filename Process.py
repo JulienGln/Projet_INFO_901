@@ -36,6 +36,7 @@ class Process(Thread):
 
     def stop(self):
         self.alive = False
+        self.com.processDie()
 
     def waitStopped(self):
         self.join()

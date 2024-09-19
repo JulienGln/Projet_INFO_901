@@ -19,6 +19,7 @@ class Com():
         Com.nbProcessCreated += 1
         self.lock = Lock()
         self.mailbox = Mailbox()
+        self.processAlive = True
 
         self.etat = "null"
 
@@ -85,6 +86,7 @@ class Com():
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=Token)
     def onToken(self, token: Token):
+        """Réception du token et traitement"""
         if token.getTo() == self.myId:
             if self.etat == "request":
                 self.etat = "SC"
@@ -96,8 +98,8 @@ class Com():
             
             next = (self.myId + 1) % self.nbProcess
             token.setTo(next)
-            # if self.alive:
-            PyBus.Instance().post(token)
+            if self.processAlive:
+                PyBus.Instance().post(token)
 
     def synchronize(self):
         pass
@@ -112,3 +114,10 @@ class Com():
 
     def recevFromSync(self, obj, sender: int):
         pass
+
+
+    # AUTRES METHODES #
+
+    def processDie(self):
+        """Appelée par le processus pour signaler au communicateur qu'il est mort"""
+        self.processAlive = False
