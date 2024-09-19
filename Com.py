@@ -5,6 +5,7 @@ from Mailbox import Mailbox
 from BroadcastMessage import BroadcastMessage
 from MessageTo import MessageTo
 from Token import Token
+from Barrier import Barrier
 
 from pyeventbus3.pyeventbus3 import *
 
@@ -22,6 +23,7 @@ class Com():
         self.processAlive = True
 
         self.etat = "null"
+        self.barrier = False
 
         PyBus.Instance().register(self, self)
 
@@ -37,8 +39,10 @@ class Com():
         return self.nbProcess
     
     def inc_clock(self, other_stamp = 0):
+        """L'horloge s'incrémente de 1 pour les envois et s'incrémente du max(mon horloge, l'horloge de l'autre) + 1 pour les réceptions"""
         with self.lock:
             self.clock = max(self.clock, other_stamp) + 1
+            print(f"Horloge de P{self.myId} = {self.clock}")
 
     # COMMUNICATION ASYNCHRONE #
 
@@ -105,8 +109,47 @@ class Com():
             if self.processAlive:
                 PyBus.Instance().post(token)
 
+    # BARRIERE DE SYNCHRONISATION #
+
     def synchronize(self):
-        pass
+        """Méthode appelée par un processus lorsqu'il veut se synchroniser (barrière de synchronisation)"""
+        leader = 0
+
+        if self.myId == leader:
+            print(f"Le leader {leader} envoie : \"J'attends à la barrière\"")
+            self.inc_clock()
+            PyBus.Instance().post(Barrier(clock=self.clock, payload="J'attends à la barrière", sender=self.myId))
+
+        else:
+            self.barrier = True
+            while self.barrier:
+                sleep(0.5)
+            print(f"P{self.myId} quitte la barrière...")
+
+    @subscribe(threadMode=Mode.PARALLEL, onEvent=Barrier)
+    def onBarrier(self, msg: Barrier):
+        leader = 0
+        next = (self.myId + 1) % self.nbProcess
+        prev = (self.myId - 1) % self.nbProcess
+
+        self.inc_clock(msg.getStamp())
+
+        if self.myId == leader and msg.getSender() == prev:
+            print(f"Le leader {leader} envoie : \"Tout le monde est à la barrière\"")
+            self.inc_clock()
+            PyBus.Instance().post(Barrier(clock=self.clock, payload="Tout le monde est à la barrière", sender=self.myId))
+        
+        else:
+            if msg.getSender() == prev:
+
+                if msg.getPayload() == "J'attends à la barrière":
+                    print(f"P{self.myId} a reçu le message d'attente de P{msg.getSender()} et le transmet à P{next}")
+                    self.inc_clock()
+                    PyBus.Instance().post(Barrier(clock=self.clock, payload=msg.getPayload(), sender=self.myId))
+
+                elif msg.getPayload() == "Tout le monde est à la barrière":
+                    self.barrier = False
+
 
     # COMMUNICATION SYNCHRONE #
 
