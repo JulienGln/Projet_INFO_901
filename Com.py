@@ -168,7 +168,7 @@ class Com():
             while nbReception < self.nbProcess - 1:
                 sleep(1)
                 msg = self.mailbox.getMsgOfType(MessageTo)
-                
+
                 if msg != None and msg.getPayload() == ack:
                     nbReception += 1
 
@@ -176,7 +176,7 @@ class Com():
 
         else:
             recvMsg = self.mailbox.getMsgOfType(BroadcastMessageSync)
-            timeout = 5
+            timeout = 0
 
             while recvMsg == None:
                 sleep(1)
@@ -192,11 +192,42 @@ class Com():
         self.inc_clock(msg.getStamp())
         self.mailbox.add(msg)
 
+
     def sendToSync(self, obj, dest: int):
-        pass
+        """Méthode d'envoi synchrone spécifique"""
+        self.inc_clock()
+        msg = MessageToSync(clock=self.clock, payload=obj, sender=self.myId, to=dest)
+        PyBus.Instance().post(msg)
+
+        msg = self.mailbox.getMsgOfType(MessageTo)
+        while msg == None or msg.getTo() != self.myId or msg.getPayload() != "ACK MESSAGE SYNC":
+            sleep(1)
+            msg = self.mailbox.getMsgOfType(MessageTo)
+        print(f"P{self.myId}: P{dest} a bien reçu mon message. Je passe à autre chose...")
 
     def recevFromSync(self, obj, sender: int):
-        pass
+        """Récupère de la boîte aux lettres, de manière bloquante, le message de `sender`"""
+        msg = self.mailbox.getMsgOfType(MessageToSync)
+
+        print(f"P{self.myId}: J'attends un message de P{sender}...")
+        timeout = 0
+        while (msg == None or msg.getSender() != sender):
+            sleep(1)
+            msg = self.mailbox.getMsgOfType(MessageToSync)
+            if timeout >= 5:
+                print(f"P{self.myId}: Timeout dépassé, j'abandonne...")
+                return
+            timeout += 1
+        print(f"P{self.myId}: J'ai reçu dans ma boîte \"{msg.getPayload()}\" de la part de {msg.getSender()}")
+        # Acquittement
+        self.inc_clock()
+        PyBus.Instance().post(MessageTo(clock=self.clock, payload="ACK MESSAGE SYNC", sender=self.myId, to=sender))
+
+    @subscribe(threadMode=Mode.PARALLEL, onEvent=MessageToSync)
+    def onMessageToSync(self, msg: MessageToSync):
+        if msg.getTo() == self.myId:
+            self.inc_clock(msg.getStamp())
+            self.mailbox.add(msg)
 
 
     # AUTRES METHODES #

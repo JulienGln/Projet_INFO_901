@@ -15,8 +15,8 @@ class MessageTo(Message):
     def __str__(self):
         return super().__str__()
     
-    
-class MessageToSync(Message):
 
-    def __init__(self, clock=0, payload=None, sender=0):
-        super().__init__(clock, payload, sender)
+class MessageToSync(MessageTo):
+
+    def __init__(self, clock=0, payload=None, sender=0, to=0):
+        super().__init__(clock, payload, sender, to)

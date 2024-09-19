@@ -41,7 +41,7 @@ class Process(Thread):
             sleep(0.5)
             self.com.releaseSC()
 
-    def testSynchrone(self):
+    def testBroadcastSynchrone(self):
         if self.getName() == "P1":
             self.com.broadcastSync(None, 0)
 
@@ -50,6 +50,13 @@ class Process(Thread):
         
         elif self.getName() == "P2":
             self.com.broadcastSync(None, 0)
+
+    def testMsgSynchrone(self):
+        if self.getName() == "P2":
+            self.com.recevFromSync(None, 0)
+
+        elif self.getName() == "P0":
+            self.com.sendToSync("Mesage synchrone pour P2", 2)
 
 
     def run(self):
@@ -61,7 +68,8 @@ class Process(Thread):
 
             # self.testAsynchrone()
             # self.testSectionCritique()
-            self.testSynchrone()
+            # self.testBroadcastSynchrone()
+            self.testMsgSynchrone()
 
             loop += 1
         print(self.getName() + " stopped")
