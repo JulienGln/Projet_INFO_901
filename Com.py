@@ -74,15 +74,18 @@ class Com():
     #  SECTION CRITIQUE ET GESTION DU TOKEN #
 
     def requestSC(self):
+        """Demande de SC en attente active pour l'instant"""
         self.etat = "request"
 
-        self.lock.acquire(blocking=True, timeout=5)
-        # while self.etat != "SC": # and self.alive
-        #     sleep(1)
+        # if self.processAlive:
+        #     print(f"Acquisition du verrou par P{self.myId}")
+        #     self.lock.acquire(blocking=True, timeout=5)
+        while self.etat != "SC" and self.processAlive:
+            sleep(1)
 
     def releaseSC(self):
         self.etat = "release"
-        self.lock.release()
+        # self.lock.release()
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=Token)
     def onToken(self, token: Token):
@@ -93,7 +96,8 @@ class Com():
 
                 while self.etat != "release":
                     sleep(1)
-
+                
+                print(f"P{self.myId}: J'ai relaché la SC")
                 self.etat = "null"
             
             next = (self.myId + 1) % self.nbProcess
