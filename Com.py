@@ -2,8 +2,8 @@ from threading import Lock
 from time import sleep
 
 from Mailbox import Mailbox
-from BroadcastMessage import BroadcastMessage
-from MessageTo import MessageTo
+from BroadcastMessage import BroadcastMessage, BroadcastMessageSync
+from MessageTo import MessageTo, MessageToSync
 from Token import Token
 from Barrier import Barrier
 
@@ -120,7 +120,7 @@ class Com():
             self.inc_clock()
             PyBus.Instance().post(Barrier(clock=self.clock, payload="J'attends à la barrière", sender=self.myId))
 
-        else:
+        else: # peut-être à enlever...
             self.barrier = True
             while self.barrier:
                 sleep(0.5)
@@ -154,7 +154,43 @@ class Com():
     # COMMUNICATION SYNCHRONE #
 
     def broadcastSync(self, obj, sender: int):
-        pass
+        """Broadcast synchrone"""
+        ack = "ACK BROADCAST"
+        if self.myId == sender:
+            self.inc_clock()
+            msg = BroadcastMessageSync(clock=self.clock, payload=obj, sender=self.myId)
+            PyBus.Instance().post(msg)
+            print(f"P{self.myId}: J'envoie en broadcast synchrone...")
+
+            #  Attend que tous les autres process aient le message pour repartir faire sa vie
+            nbReception = 0
+
+            while nbReception < self.nbProcess - 1:
+                sleep(1)
+                msg = self.mailbox.getMsgOfType(MessageTo)
+                
+                if msg != None and msg.getPayload() == ack:
+                    nbReception += 1
+
+            print(f"P{self.myId}: Tout le monde a reçu, je passe à autre chose.")
+
+        else:
+            recvMsg = self.mailbox.getMsgOfType(BroadcastMessageSync)
+            timeout = 5
+
+            while recvMsg == None:
+                sleep(1)
+                recvMsg = self.mailbox.getMsgOfType(BroadcastMessageSync)
+                timeout += 1
+
+            print(f"P{self.myId}: J'ai reçu \"{recvMsg.getPayload()}\" de P{recvMsg.getSender()}")
+            # Envoi d'un acquittement
+            PyBus.Instance().post(MessageTo(clock=self.clock, payload=ack, sender=self.myId, to=sender))
+
+    @subscribe(threadMode=Mode.PARALLEL, onEvent=BroadcastMessageSync)
+    def onBroadcastSync(self, msg: BroadcastMessageSync):
+        self.inc_clock(msg.getStamp())
+        self.mailbox.add(msg)
 
     def sendToSync(self, obj, dest: int):
         pass
