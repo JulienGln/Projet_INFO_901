@@ -41,6 +41,20 @@ class Process(Thread):
             sleep(0.5)
             self.com.releaseSC()
 
+    def testSynchronize(self):
+        if self.getName() == "P1":
+            self.com.sendTo("Salut !", 2)
+            self.com.synchronize()
+
+        elif self.getName() == "P0":
+            self.com.broadcast("Je vous spam tous !")
+            self.com.synchronize()
+        
+        elif self.getName() == "P2":
+            self.com.broadcast("Hello !")
+            sleep(0.5)
+            self.com.synchronize()
+
     def testBroadcastSynchrone(self):
         if self.getName() == "P1":
             self.com.broadcastSync(None, 0)
@@ -68,8 +82,9 @@ class Process(Thread):
 
             # self.testAsynchrone()
             # self.testSectionCritique()
+            self.testSynchronize()
             # self.testBroadcastSynchrone()
-            self.testMsgSynchrone()
+            # self.testMsgSynchrone()
 
             loop += 1
         print(self.getName() + " stopped")

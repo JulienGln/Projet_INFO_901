@@ -120,11 +120,11 @@ class Com():
             self.inc_clock()
             PyBus.Instance().post(Barrier(clock=self.clock, payload="J'attends à la barrière", sender=self.myId))
 
-        else: # peut-être à enlever...
-            self.barrier = True
-            while self.barrier:
-                sleep(0.5)
-            print(f"P{self.myId} quitte la barrière...")
+        # else:
+        self.barrier = True
+        while self.barrier and self.processAlive:
+            sleep(0.5)
+        print(f"P{self.myId} quitte la barrière...")
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=Barrier)
     def onBarrier(self, msg: Barrier):
