@@ -32,10 +32,6 @@ class Com():
 
         PyBus.Instance().register(self, self)
 
-        # Lancement du token 
-        if self.myId == self.nbProcess - 1:
-            token = Token(to=0)
-            PyBus.Instance().post(token)
 
     def getMyId(self):
         return self.myId
@@ -259,6 +255,11 @@ class Com():
     def init(self):
         """Init appelée par le processus"""
         self.numerotationAutomatique()
+
+        # Lancement du token 
+        if self.myId == self.nbProcess - 1:
+            token = Token(to=0)
+            PyBus.Instance().post(token)
 
     def numerotationAutomatique(self):
         """
