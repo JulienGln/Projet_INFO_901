@@ -72,6 +72,60 @@ class Process(Thread):
         elif self.getName() == "P0":
             self.com.sendToSync("Message synchrone pour P2", 2)
 
+    def testExempleInitial(self):
+        if self.getName() == "P0":
+            self.com.sendTo("j'appelle 2 et je te recontacte après", 1)
+            
+            self.com.sendToSync("J'ai laissé un message à 2, je le rappellerai après, on se sychronise tous et on attaque la partie ?", 2)
+            msg = None
+            self.com.recevFromSync(msg, 2)
+            
+            self.com.sendToSync("2 est OK pour jouer, on se synchronise et c'est parti!",1)
+                
+            self.com.synchronize()
+                
+            self.com.requestSC()
+            if self.com.mailbox.isEmpty():
+                print("Catched !")
+                self.com.broadcast("J'ai gagné !!!")
+            else:
+                msg = self.com.mailbox.getMsg()
+                print(str(msg.getSender())+" à eu le jeton en premier")
+            self.com.releaseSC()
+
+
+        if self.getName() == "P1":
+            if not self.com.mailbox.isEmpty():
+                msg = self.com.mailbox.getMsg()
+                self.com.recevFromSync(msg, 0)
+
+                self.com.synchronize()
+                
+                self.com.requestSC()
+                if self.com.mailbox.isEmpty():
+                    print("Catched !")
+                    self.com.broadcast("J'ai gagné !!!")
+                else:
+                    msg = self.com.mailbox.getMsg()
+                    print(str(msg.getSender())+" a eu le jeton en premier")
+                self.com.releaseSC()
+                
+        if self.getName() == "P2":
+            msg = None
+            self.com.recevFromSync(msg, 0)
+            self.com.sendToSync("OK", 0)
+
+            self.com.synchronize()
+                
+            self.com.requestSC()
+            if self.com.mailbox.isEmpty():
+                print("Catched !")
+                self.com.broadcast("J'ai gagné !!!")
+            else:
+                msg = self.com.mailbox.getMsg()
+                print(str(msg.getSender())+" a eu le jeton en premier")
+            self.com.releaseSC()
+
 
     def run(self):
         loop = 0
@@ -90,7 +144,8 @@ class Process(Thread):
             # self.testSectionCritique()
             # self.testSynchronize()
             # self.testBroadcastSynchrone()
-            self.testMsgSynchrone()
+            # self.testMsgSynchrone()
+            self.testExempleInitial()
 
             loop += 1
         print(self.getName() + " stopped")
