@@ -30,7 +30,8 @@ def run(self):
         # self.testSectionCritique()
         # self.testSynchronize()
         # self.testBroadcastSynchrone()
-        self.testMsgSynchrone()
+        # self.testMsgSynchrone()
+        self.testExempleInitial()
 
         loop += 1
     print(self.getName() + " stopped")

@@ -90,7 +90,7 @@ class Process(Thread):
                 self.com.broadcast("J'ai gagné !!!")
             else:
                 msg = self.com.mailbox.getMsg()
-                print(str(msg.getSender())+" à eu le jeton en premier")
+                print(str(msg.getSender())+" a eu le jeton en premier")
             self.com.releaseSC()
 
 
