@@ -76,19 +76,21 @@ class Process(Thread):
     def run(self):
         loop = 0
 
-        # sleep(3)
-        # self.myId = self.com.numerotationAutomatique()
-        # print(f"{self.getName()}: ID après numérotation = {self.myId}")
+        sleep(1)
+        self.com.init()
+        self.myId = self.com.getMyId()
+        print(f"{self.getName()}: ID après numérotation = {self.myId}")
+        self.setName(f"P{self.myId}")
 
         while self.alive:
             print(self.getName() + " Loop: " + str(loop))
             sleep(1)
 
             # self.testAsynchrone()
-            self.testSectionCritique()
+            # self.testSectionCritique()
             # self.testSynchronize()
             # self.testBroadcastSynchrone()
-            # self.testMsgSynchrone()
+            self.testMsgSynchrone()
 
             loop += 1
         print(self.getName() + " stopped")

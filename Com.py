@@ -13,13 +13,13 @@ from pyeventbus3.pyeventbus3 import *
 
 class Com():
     """Classe communicateur pour l’envoi et la réception de message"""
-    nbProcessCreated = 0
+    # nbProcessCreated = 0
 
     def __init__(self, nbProcess):
         self.clock = 0
         self.nbProcess = nbProcess
-        self.myId = Com.nbProcessCreated
-        Com.nbProcessCreated += 1
+        self.myId = 0 # ID provisoire #Com.nbProcessCreated
+        # Com.nbProcessCreated += 1
 
         self.clockLock = Lock()
         self.scLock = Lock()
@@ -192,6 +192,9 @@ class Com():
             while recvMsg == None:
                 sleep(1)
                 recvMsg = self.mailbox.getMsgOfType(BroadcastMessageSync)
+                if timeout >= 3:
+                    print(f"P{self.myId}: Timeout dépassé, j'abandonne...")
+                    return
                 timeout += 1
 
             print(f"P{self.myId}: J'ai reçu \"{recvMsg.getPayload()}\" de P{recvMsg.getSender()}")
@@ -253,6 +256,10 @@ class Com():
         """Appelée par le processus pour signaler au communicateur qu'il est mort"""
         self.processAlive = False
 
+    def init(self):
+        """Init appelée par le processus"""
+        self.numerotationAutomatique()
+
     def numerotationAutomatique(self):
         """
         Chaque processus tire un nb aléatoire. Il est envoyé sur le bus et est réceptionné par les autres (méthode `onNumerotation()`). \n
@@ -264,12 +271,12 @@ class Com():
         nb = randint(0, self.nbProcess * 1000)
         PyBus.Instance().post(Numerotation(payload=nb))
 
-        sleep(3)
+        sleep(1)
         tab = []
         for _ in range(self.nbProcess):
             msg = self.mailbox.getMsgOfType(Numerotation)
             if msg == None:
-                sleep(1)
+                sleep(0.5)
                 msg = self.mailbox.getMsgOfType(Numerotation)
             tab.append(int(msg.getPayload()))
         tab.sort()
