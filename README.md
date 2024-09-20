@@ -49,6 +49,11 @@ Cela permet de faire la distinction entre les broadcasts et messages dédiés sy
 
 ## Section critique et synchronisation
 ### Section critique
+Pour accéder à la section critique, les communicateurs se transmettent des messages via le bus de type [`Token`](./Token.py). Deux méthodes sont disponibles (dans la classe [`Com`](./Com.py)) pour accéder à la SC : 
+- `requestSC(self)` : Cette méthode met à jour la variable d'instance `self.etat` à _request_ et acquiert un verrou `self.scLock`.
+- `releaseSC(self)` : Cette méthode relache le verrou `self.scLock` et change l'état à _release_.
+
+Si un processus a le token, il peut alors accéder à la section critique (s'il le demande). Tout cela est implémenté dans la méthode de callback `onToken(self, token: Token)` de la classe `Com`.
 
 ### Synchronisation
 La synchronisation des processus implémente la logique de **barrière de synchronisation**.
@@ -74,3 +79,38 @@ Deux méthodes de la classe `Com` implémente la logique de la numérotation aut
 - `onNumerotation(self, msg: Numerotation)` : Méthode de callback lorsqu'un message de type `Numerotation` circule sur le bus. Tous les processus ajoutent le `msg` dans leur boîte aux lettres.
 
 Additionnellement, une méthode `init(self)` a été ajouté à la classe `Com`. Cette méthode est appelée par les [processus](./Process.py) (dans leur méthode `run(self)`) pour "initialiser" leurs communicateurs. Elle est chargée d'appeler la méthode de numérotation automatique.
+
+## Résumé des classes et fichiers utilisés
+- [`Com`](./Com.py) :
+    - Communicateur du middleware, la classe contient toutes l'ensemble des méthodes de communication.
+- [`Process`](./Process.py) :
+    - Classe qui hérite de `Thread`, instancie et utilise un communicateur.
+- [`Launcher`](./Launcher.py) :
+    - Contient la méthode de lancement des threads `__main__`
+- [`Message`](./Message.py) :
+    - Classe de messages générique avec notamment une estampille et un message (payload).
+- [`Mailbox`](./Mailbox.py) :
+    - Classe qui représente la boîte aux lettres d'un communicateur. La boîte est représentée par un tableau `self.messages`.
+    - Contient des méthodes de manipulation qui permettent entre autre de récupérer le premier message d'un certain type (méthode `getMsgOfType(self, type)`).
+- [`BroadcastMessage`](./BroadcastMessage.py) :
+    - Classe utilisée par `Com` pour envoyer des messages asynchrones en broadcast aux autres processus.
+    - Hérite de la classe `Message`.
+- [`BroadcastMessageSync`](./BroadcastMessage.py) :
+    - Classe utilisée par `Com` pour envoyer des messages synchrones en broadcast aux autres processus.
+    - Hérite de la classe `Message`.
+- [`MessageTo`](./MessageTo.py) :
+    - Classe utilisée par `Com` pour envoyer des messages dédiés asynchrones à un processus.
+    - Utilise une variable `self.to` qui contient l'identifiant du processus destinataire.
+    - Hérite de la classe `Message`.
+- [`MessageToSync`](./MessageTo.py) :
+    - Classe utilisée par `Com` pour envoyer des messages dédiés synchrones à un processus.
+    - Hérite de la classe `MessageTo`.
+- [`Token`](./Token.py) : 
+    - Classe utilisée par `Com` pour accéder à la section critique.
+    - Le token a une variable `self.to` pour simuler une topologie en anneau lorsqu'il est envoyé sur le bus.
+- [`Barrier`](./Barrier.py) :
+    - Les messages de type `Barrier` sont utilisés par le communicateur pour la barrière de synchronisation.
+    - Hérite de la classe `Message`.
+- [`Numerotation`](./Numerotation.py) :
+    - Les messages de type `Numerotation` sont envoyés et reçus en broadcast.
+    - Hérite de la classe `Message`.
