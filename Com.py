@@ -1,11 +1,13 @@
 from threading import Lock
 from time import sleep
+from random import randint
 
 from Mailbox import Mailbox
 from BroadcastMessage import BroadcastMessage, BroadcastMessageSync
 from MessageTo import MessageTo, MessageToSync
 from Token import Token
 from Barrier import Barrier
+from Numerotation import Numerotation
 
 from pyeventbus3.pyeventbus3 import *
 
@@ -136,6 +138,7 @@ class Com():
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=Barrier)
     def onBarrier(self, msg: Barrier):
+        """Réception des messages de type `Barrier`"""
         leader = 0
         next = (self.myId + 1) % self.nbProcess
         prev = (self.myId - 1) % self.nbProcess
@@ -249,3 +252,36 @@ class Com():
     def processDie(self):
         """Appelée par le processus pour signaler au communicateur qu'il est mort"""
         self.processAlive = False
+
+    def numerotationAutomatique(self):
+        """
+        Chaque processus tire un nb aléatoire. Il est envoyé sur le bus et est réceptionné par les autres (méthode `onNumerotation()`). \n
+        Les processus classent dans un tableau leur numéro et celui des autres. \n
+        Si un numéro est identique à un autre, laprocédure est recommencée. \n
+        Enfin, la valeur de retour est l'index du nb tiré par le processus dans le tableau trié.
+        Cette valeur sera utilisée en guise d'ID du processus.
+        """
+        nb = randint(0, self.nbProcess * 1000)
+        PyBus.Instance().post(Numerotation(payload=nb))
+
+        sleep(3)
+        tab = []
+        for _ in range(self.nbProcess):
+            msg = self.mailbox.getMsgOfType(Numerotation)
+            if msg == None:
+                sleep(1)
+                msg = self.mailbox.getMsgOfType(Numerotation)
+            tab.append(int(msg.getPayload()))
+        tab.sort()
+
+        for i in range(len(tab) - 1):
+            if tab[i] == tab[i+1]:
+                return self.numerotationAutomatique()
+        
+        self.myId = tab.index(nb)
+        return tab.index(nb)
+
+    @subscribe(threadMode=Mode.PARALLEL, onEvent=Numerotation)
+    def onNumerotation(self, msg: Numerotation):
+        self.mailbox.add(msg)
+        print(f"Mailbox de P{self.myId} : {self.mailbox}")

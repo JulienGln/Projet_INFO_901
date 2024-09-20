@@ -70,11 +70,15 @@ class Process(Thread):
             self.com.recevFromSync(None, 0)
 
         elif self.getName() == "P0":
-            self.com.sendToSync("Mesage synchrone pour P2", 2)
+            self.com.sendToSync("Message synchrone pour P2", 2)
 
 
     def run(self):
         loop = 0
+
+        # sleep(3)
+        # self.myId = self.com.numerotationAutomatique()
+        # print(f"{self.getName()}: ID après numérotation = {self.myId}")
 
         while self.alive:
             print(self.getName() + " Loop: " + str(loop))
