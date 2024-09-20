@@ -51,7 +51,7 @@ Cela permet de faire la distinction entre les broadcasts et messages dédiés sy
 ### Section critique
 Pour accéder à la section critique, les communicateurs se transmettent des messages via le bus de type [`Token`](./Token.py). Deux méthodes sont disponibles (dans la classe [`Com`](./Com.py)) pour accéder à la SC : 
 - `requestSC(self)` : Cette méthode met à jour la variable d'instance `self.etat` à _request_ et acquiert un verrou `self.scLock`.
-- `releaseSC(self)` : Cette méthode relache le verrou `self.scLock` et change l'état à _release_.
+- `releaseSC(self)` : Cette méthode relâche le verrou `self.scLock` et change l'état à _release_.
 
 Si un processus a le token, il peut alors accéder à la section critique (s'il le demande). Tout cela est implémenté dans la méthode de callback `onToken(self, token: Token)` de la classe `Com`.
 
@@ -82,7 +82,7 @@ Additionnellement, une méthode `init(self)` a été ajouté à la classe `Com`.
 
 ## Résumé des classes et fichiers utilisés
 - [`Com`](./Com.py) :
-    - Communicateur du middleware, la classe contient toutes l'ensemble des méthodes de communication.
+    - Communicateur du middleware, la classe contient tout l'ensemble des méthodes de communication.
 - [`Process`](./Process.py) :
     - Classe qui hérite de `Thread`, instancie et utilise un communicateur.
 - [`Launcher`](./Launcher.py) :
