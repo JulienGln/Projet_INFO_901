@@ -11,6 +11,33 @@ Le programme se lance avec la commande suivante :
 Le projet n'utilise pas de bibliothèques tierces hors celles incluses dans le langage de base (`threading`, `time`, etc.) et hormis la bibliothèque `pyeventbus3`.
 >```$ pip install pyeventbus3```
 
+## Programme principal (méthode run de Process.py)
+```py
+def run(self):
+    loop = 0
+
+    sleep(1)
+    self.com.init()
+    self.myId = self.com.getMyId()
+    print(f"{self.getName()}: ID après numérotation = {self.myId}")
+    self.setName(f"P{self.myId}")
+
+    while self.alive:
+        print(self.getName() + " Loop: " + str(loop))
+        sleep(1)
+
+        # self.testAsynchrone()
+        # self.testSectionCritique()
+        # self.testSynchronize()
+        # self.testBroadcastSynchrone()
+        self.testMsgSynchrone()
+
+        loop += 1
+    print(self.getName() + " stopped")
+```
+
+Des méthodes nommées `test[...]` sont disponibles pour tester chaque partie du projet.
+
 # Explication des classes
 ## Communication asynchrone
 La classe [`Com`](./Com.py) implémente plusieurs méthodes pour gérer la communication asynchrone :
