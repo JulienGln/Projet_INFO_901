@@ -18,7 +18,10 @@ class Com():
         self.nbProcess = nbProcess
         self.myId = Com.nbProcessCreated
         Com.nbProcessCreated += 1
-        self.lock = Lock()
+
+        self.clockLock = Lock()
+        self.scLock = Lock()
+
         self.mailbox = Mailbox()
         self.processAlive = True
 
@@ -40,7 +43,7 @@ class Com():
     
     def inc_clock(self, other_stamp = 0):
         """L'horloge s'incrémente de 1 pour les envois et s'incrémente du max(mon horloge, l'horloge de l'autre) + 1 pour les réceptions"""
-        with self.lock:
+        with self.clockLock:
             self.clock = max(self.clock, other_stamp) + 1
             print(f"Horloge de P{self.myId} = {self.clock}")
 
@@ -78,18 +81,22 @@ class Com():
     #  SECTION CRITIQUE ET GESTION DU TOKEN #
 
     def requestSC(self):
-        """Demande de SC en attente active pour l'instant"""
+        """Demande de section critique"""
         self.etat = "request"
 
-        # if self.processAlive:
-        #     print(f"Acquisition du verrou par P{self.myId}")
-        #     self.lock.acquire(blocking=True, timeout=5)
-        while self.etat != "SC" and self.processAlive:
-            sleep(1)
+        if self.etat != "SC" and self.processAlive:
+            print(f"Acquisition du verrou par P{self.myId}")
+            self.scLock.acquire(blocking=True, timeout=5)
+            
+        # while self.etat != "SC" and self.processAlive:
+        #     sleep(1)
 
     def releaseSC(self):
+        """Libération de la section critique"""
+        print(f"Etat P{self.myId} : {self.etat}")
         self.etat = "release"
-        # self.lock.release()
+        if self.scLock.locked():
+            self.scLock.release()
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=Token)
     def onToken(self, token: Token):
@@ -98,7 +105,8 @@ class Com():
             if self.etat == "request":
                 self.etat = "SC"
 
-                while self.etat != "release":
+                # while self.etat != "release":
+                while self.scLock.locked():
                     sleep(1)
                 
                 print(f"P{self.myId}: J'ai relaché la SC")
@@ -189,6 +197,9 @@ class Com():
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=BroadcastMessageSync)
     def onBroadcastSync(self, msg: BroadcastMessageSync):
+        """Réception d'un message de broadcast synchrone depuis le bus et ajout dans la boîte aux lettres. 
+        Le reste de la logique est gérée dans la méthode `broadcastSync()`"""
+
         self.inc_clock(msg.getStamp())
         self.mailbox.add(msg)
 
@@ -225,6 +236,9 @@ class Com():
 
     @subscribe(threadMode=Mode.PARALLEL, onEvent=MessageToSync)
     def onMessageToSync(self, msg: MessageToSync):
+        """Réception d'un message dédié synchrone depuis le bus et ajout dans la boîte aux lettres. 
+        Le reste de la logique est gérée dans la méthode `recevFromSync()`"""
+
         if msg.getTo() == self.myId:
             self.inc_clock(msg.getStamp())
             self.mailbox.add(msg)

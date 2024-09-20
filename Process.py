@@ -27,9 +27,11 @@ class Process(Thread):
 
     def testSectionCritique(self):
         if self.getName() == "P1":
+            self.com.requestSC()
             self.com.sendTo("Salut !", 2)
+            self.com.releaseSC()
 
-        elif self.getName() == "P0":
+        if self.getName() == "P0":
             self.com.requestSC()
             self.com.broadcast("Je vous spam tous !")
             self.com.releaseSC()
@@ -37,8 +39,6 @@ class Process(Thread):
         elif self.getName() == "P2":
             self.com.requestSC()
             self.com.broadcast("P2 accède à la section critique")
-            print(f"P2 : Je suis dans la SC")
-            sleep(0.5)
             self.com.releaseSC()
 
     def testSynchronize(self):
@@ -81,8 +81,8 @@ class Process(Thread):
             sleep(1)
 
             # self.testAsynchrone()
-            # self.testSectionCritique()
-            self.testSynchronize()
+            self.testSectionCritique()
+            # self.testSynchronize()
             # self.testBroadcastSynchrone()
             # self.testMsgSynchrone()
 
